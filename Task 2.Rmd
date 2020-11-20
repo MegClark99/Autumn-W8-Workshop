@@ -1,0 +1,74 @@
+---
+title: "Task 2"
+author: "Megan Clark"
+date: "20/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Importing data**
+```
+file <- "sol.txt"
+sol <- read_table2(file)
+names(sol)
+```
+
+We can see that the genename is in the first column.
+Transpose all the values except the genename:
+```
+tsol <- sol %>% 
+  select(-genename) %>% 
+  t() %>% 
+  data.frame()
+```
+
+Use the genenames in sol to name the columns in tsol:
+```
+names(tsol) <- sol$genename
+```
+
+The column names of sol have become the row names of tsol. We can add a column for these as well
+```
+tsol$sample <- row.names(tsol)
+```
+
+And process the sample name so we have the cell lineage in one column and the replicate in another
+```
+tsol <- tsol %>% 
+  extract(sample, 
+          c("lineage","rep"),
+          "(Y[0-9]{3,4})\\_([A-C])")
+
+colnames(tsol)
+summary(tsol)
+ncol(tsol)
+
+
+pcatsol <- tsol %>% 
+  select(-lineage, -rep) %>%
+  prcomp(scale. = TRUE)
+
+summary(pcatsol)[["importance"]][,1:10]
+summary(pcatsol)
+#prop od var. PC1 (comb of all variables) exlain 30% of variance overall.
+#will always go down, PC2 explains less variance etc. should all add up to 1 to explain total variance
+#allows semi quantitative
+# axis for graph PC1 then % of variancce it encodes (for assessment)
+
+#nmds so cant quantify (n stands for non-metric)
+
+dattsol <-  data.frame(pcatsol$x)
+
+#Plot PC1 against PC2.
+
+ggplot(dattsol, aes(x = PC1, y = PC2)) +
+  geom_point()
+  
+dattsol %>%
+  select(PC1:PC15) %>% 
+  ggpairs()
+```
+
