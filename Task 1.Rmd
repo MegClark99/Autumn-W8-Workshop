@@ -1,0 +1,80 @@
+---
+title: "Wheat Seeds Dataset"
+author: "Megan Clark"
+date: "20/11/2020"
+output: html_document
+---
+```{r library}
+library(ggplot2)
+library(palmerpenguins)
+library(GGally)
+library(Rtsne)
+library(tidyverse)
+```
+
+**Importing data**
+```
+seeds <- read.table("seeds_dataset.txt")
+seeds
+```
+
+**renaming the column headers**
+```
+seeds2 <- seeds %>% 
+  rename(
+    Area = V1,
+    Perimeter = V2,
+    Compactness = V3,
+    "Length of kernel" = V4,
+    "Width of kernel" = V5,
+    "Asymmetry coefficient" = V6,
+    "Length of kernel groove" = V7,
+    Variety = V8
+    )
+```
+**changing the Varieties to their actual names**
+```
+seeds3 <- within(seeds2, Variety <- factor(Variety, labels = c("Kama", "Rosa", "Canadian")))
+```
+
+**Select variables of interest and pipe in to ggpairs():**
+```
+seeds3 %>%
+  select(Area, 
+         Perimeter, 
+         Compactness,
+         "Length of kernel",
+         "Width of kernel",
+         "Asymmetry coefficient",
+         "Length of kernel groove",
+         Variety) %>%
+  ggpairs(aes(color = Variety))
+```
+
+Now to run the PCA. Remember, we can only include numeric variables.
+
+**Selecting the variables and pipe into the prcomp() function which does the PCA:**
+```
+pca <- seeds3 %>% 
+  select(Area, 
+         Perimeter, 
+         Compactness,
+         "Length of kernel",
+         "Width of kernel",
+         "Asymmetry coefficient",
+         "Length of kernel groove") %>%
+  prcomp(scale. = TRUE)
+
+summary(pca)
+
+pca$rotation
+
+pca_labelled <- data.frame(pca$x, common_name = seeds3$Variety)
+
+# and then to do a scatterplot
+
+pca_labelled %>% 
+  ggplot(aes(x = PC1, y = PC2, color = common_name)) +
+  geom_point()
+```
+
